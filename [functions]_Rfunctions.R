@@ -1,0 +1,93 @@
+# functions used for the projects
+inormal <- function(x) {
+  qnorm((rank(x, na.last = "keep") - 0.5) / sum(!is.na(x)))
+}
+
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
+
+plot_heatmap = function(dat, axisNames)
+{
+  # define function to obtain lower triangle
+  # get correlation matrix for both samples together
+  cor = cor(dat, use = "p")
+  cor = get_lower_tri(cor)
+  # melt matrix
+  melted = reshape2::melt(cor)
+  # get rounded value
+  melted$value_round = round(melted$value, digit = 2)
+  melted$distance0 = abs(melted$value)
+  
+  # plot
+  library(ggplot2)
+  
+  p = ggplot(data = melted)+
+    geom_point(aes(x = Var1, y = Var2, shape = value, fill = value, size = distance0), 
+               shape = 21, alpha = 0.7, colour = "white") +
+    scale_fill_gradient2(low = "#82A0D8", high = "#8DDFCB", mid = "white",
+                         midpoint = 0, limit = c(-1,1), space = "Lab" ,name="Correlation", guide = "legend")+
+    scale_size_continuous(range = c(1, 15), guide = "none")+
+    geom_text(aes(Var1, Var2, label = value_round), color = "black", size = 4)+
+    xlab("")+
+    ylab("")+
+    scale_x_discrete(labels = axisNames)+
+    scale_y_discrete(labels = axisNames)+
+    guides(fill = "none")+
+    theme_bw()+
+    theme(panel.border = element_blank(),
+          axis.text.x = element_text(angle=-45,vjust = 0.5, hjust=0))
+  
+  return(p)
+}
+
+remove.outliers_grubbs <- function(dat, varnames){
+  require(outliers)
+  count.na0 <- count.na1 <- c()
+  
+  for(varname in varnames){
+    x = dat[[varname]]
+    count.na0 = c(count.na0,sum(is.na(x)))
+    keep.going <- T
+    while(keep.going){
+      test <- grubbs.test(x,opposite = T)
+      print(test)
+      if(test$p.value<0.05){
+        if(str_detect(test$alternative,"lowest")){
+          cat("-------------------------------------------------------------------")
+          cat(paste('\nReplacing the lowest value of \'',varname,'\' with NA.\n',sep=''))
+          cat("-------------------------------------------------------------------\n")
+          x[which.min(x)] <- NA
+        }else if(str_detect(test$alternative,"highest")){
+          cat("-------------------------------------------------------------------")
+          cat(paste('\nReplacing the highest value of \'',varname,'\' with NA.\n',sep=''))
+          cat("-------------------------------------------------------------------")
+          x[which.max(x)] <- NA
+        }
+      }
+      test2 <- grubbs.test(x,opposite = F)
+      print(test2)
+      if(test2$p.value<0.05){
+        if(str_detect(test2$alternative,"lowest")){
+          cat("-------------------------------------------------------------------")
+          cat(paste('\nReplacing the lowest value of \'',varname,'\' with NA.\n',sep=''))
+          cat("-------------------------------------------------------------------")
+          x[which.min(x)] <- NA
+        }else if(str_detect(test2$alternative,"highest")){
+          cat("-------------------------------------------------------------------")
+          cat(paste('\nReplacing the highest value of \'',varname,'\' with NA.\n',sep=''))
+          cat("-------------------------------------------------------------------")
+          x[which.max(x)] <- NA
+        }
+      }
+      
+      keep.going=test$p.value<0.05 | test2$p.value<0.05
+    }
+    count.na1 = c(count.na1,sum(is.na(x)))
+    dat[[varname]] <- x
+  }
+  counts.NA = data.frame(var=varnames,before=count.na0,after=count.na1)
+  ret = list(counts.NA = counts.NA, clean_data=dat)
+  ret
+}
