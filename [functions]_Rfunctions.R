@@ -1,4 +1,41 @@
 # functions used for the projects
+
+create_ggcorrplot = function(data, sel_colnames, new_colnames, ID_colname){
+  
+  df = data %>% select(all_of(sel_colnames))
+  rownames.df = data[[ID_colname]]
+  df = data.frame(df)
+  rownames(df) = rownames.df 
+  
+  i=1; ind = !is.na(df[[1]])
+  while(i<length(sel_colnames)){
+    i <- i+1
+    ind = ind | !is.na(df[[i]])
+  }
+  df = df[ind,]
+  print(sum(ind))
+  
+  ## change the order of columns 
+  names(df) = new_colnames
+  cat(names(df),sep="\n")
+
+  corr <- round(cor(df,use='p'), 2)
+  p.mat <- cor_pmat(df)
+  p.mat
+  p_ggcorr = ggcorrplot(
+    corr,
+    # hc.order = TRUE,
+    type = "lower",
+    outline.color = "white",
+    ggtheme = ggplot2::theme_bw,
+    colors = c("#6D9EC1", "white", "#E46726"),
+    # p.mat = p.mat,
+    lab=TRUE,
+  )
+  ret = list(p_ggcorr=p_ggcorr, p.mat=p.mat, corr=corr)
+  ret
+}
+
 inormal <- function(x) {
   qnorm((rank(x, na.last = "keep") - 0.5) / sum(!is.na(x)))
 }
