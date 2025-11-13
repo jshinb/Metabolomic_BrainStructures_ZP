@@ -100,31 +100,20 @@ df = df[ind,]
 names(df) = c("WM-Vol", "WM-T1wSI", "WM-MTR")
 cat(names(df),sep="\n")
 subgroup = 'sex-combined'
-vnames =  names(df)
 
-suppressWarnings({
-  # create correlation plot 
-  heat = plot_heatmap(dat = df, axisNames = vnames)
-  
-  # annotate
-  plot.title=paste0(opt$group_name, " (", subgroup, ", N = ",nrow(df),")")
-  heat <- annotate_figure(
-    heat, 
-    top = text_grob(plot.title,
-                    color = "black", 
-                    face = "bold", 
-                    size = 10)
-  ) 
-  
-  # save plot
-  ggsave(file.path(opt$output.dir,"brain_corrplot.jpg"), 
-         bg = "white",
-         plot = heat, 
-         width = 8.5*1.35, 
-         height = 4.5**1.35, 
-         units = "cm", 
-         dpi = 300)
-})
+corr <- round(cor(df,use='p'), 2)
+p.mat <- cor_pmat(df)
+p.mat
+ggcorr_all = ggcorrplot(
+  corr,
+  # hc.order = TRUE,
+  type = "lower",
+  outline.color = "white",
+  ggtheme = ggplot2::theme_bw,
+  colors = c("#6D9EC1", "white", "#E46726"),
+  # p.mat = p.mat,
+  lab=TRUE,
+)
 
 # female correlation plot ----
 subgroup = 'F'
@@ -155,31 +144,20 @@ df = df[ind,]
 ## change the order of columns 
 names(df) = c("WM-Vol", "WM-T1wSI", "WM-MTR")
 cat(names(df),sep="\n")
-vnames =  names(df)
 
-suppressWarnings({
-  # create correlation plot 
-  heat = plot_heatmap(dat = df, axisNames = vnames)
-  
-  # annotate
-  plot.title=paste0(opt$group_name, " (", subgroup, ", N = ",nrow(df),")")
-  heat <- annotate_figure(
-    heat, 
-    top = text_grob(plot.title,
-                    color = "black", 
-                    face = "bold", 
-                    size = 10)
-  ) 
-  
-  # save plot
-  ggsave(file.path(opt$output.dir,paste0("brain_corrplot_",subgroup,".jpg")), 
-         bg = "white",
-         plot = heat, 
-         width = 8.5*1.35, 
-         height = 4.5**1.35, 
-         units = "cm", 
-         dpi = 300)
-})
+corr <- round(cor(df,use='p'), 2)
+p.mat <- cor_pmat(df)
+p.mat
+ggcorr_female = ggcorrplot(
+  corr,
+  # hc.order = TRUE,
+  type = "lower",
+  outline.color = "white",
+  ggtheme = ggplot2::theme_bw,
+  colors = c("#6D9EC1", "white", "#E46726"),
+  # p.mat = p.mat,
+  lab=TRUE,
+)
 
 # male correlation plot ----
 subgroup = 'M'
@@ -211,26 +189,35 @@ names(df) = c("WM-Vol", "WM-T1wSI", "WM-MTR")
 cat(names(df),sep="\n")
 vnames =  names(df)
 
-suppressWarnings({
-  # create correlation plot 
-  heat = plot_heatmap(dat = df, axisNames = vnames)
-  
-  # annotate
-  plot.title=paste0(opt$group_name, " (", subgroup, ", N = ",nrow(df),")")
-  heat <- annotate_figure(
-    heat, 
-    top = text_grob(plot.title,
-                    color = "black", 
-                    face = "bold", 
-                    size = 10)
-  ) 
-  
-  # save plot
-  ggsave(file.path(opt$output.dir,paste0("brain_corrplot_",subgroup,".jpg")), 
-         bg = "white",
-         plot = heat, 
-         width = 8.5*1.35, 
-         height = 4.5**1.35, 
-         units = "cm", 
-         dpi = 300)
-})
+## change the order of columns 
+names(df) = c("WM-Vol", "WM-T1wSI", "WM-MTR")
+cat(names(df),sep="\n")
+
+corr <- round(cor(df,use='p'), 2)
+p.mat <- cor_pmat(df)
+p.mat
+ggcorr_male = ggcorrplot(
+  corr,
+  # hc.order = TRUE,
+  type = "lower",
+  outline.color = "white",
+  ggtheme = ggplot2::theme_bw,
+  colors = c("#6D9EC1", "white", "#E46726"),
+  # p.mat = p.mat,
+  lab=TRUE,
+)
+# save plot
+ggcorr_plot =
+  (ggcorr_all + theme(axis.text.y = element_text(size = 10)))+ 
+  (ggcorr_female+ theme(axis.text.y = element_blank())) + 
+  (ggcorr_male + theme(axis.text.y = element_blank())) + 
+  plot_layout(guides = 'collect') &
+  theme(axis.text.x = element_text(size = 10))
+
+ggsave(file.path(opt$output.dir,paste0("brain_corrplot.jpg")), 
+       bg = "white",
+       plot = ggcorr_plot, 
+       width = 8.5*3*1.25, 
+       height = 4.5**1.25, 
+       units = "cm", 
+       dpi = 300)
