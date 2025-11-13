@@ -75,7 +75,7 @@ p1 + p2 + p3 + plot_layout(guides = "collect")
 
 headTail(braindata_adjAge_wi_AgeSex)
 
-# braindata_adjAge_wi_AgeSex_cleaned (outliers have been removed) ----
+# sex-combined correlation plot ----
 braindata_adjAge_wi_AgeSex_cleaned = braindata_adjAge_wi_AgeSex %>% 
   select(uniqueID,NormWM_adjAgeSex,WMvol_adjAgeSex,MTR_WM_adjAgeSex) %>%
   rename(nT1wSI_adjAgeSex = NormWM_adjAgeSex,
@@ -87,39 +87,16 @@ braindata_adjAge_wi_AgeSex_cleaned = remove.outliers_grubbs(
 braindata_adjAge_wi_AgeSex_cleaned$counts.NA#0,1,0
 head(braindata_adjAge_wi_AgeSex_cleaned$clean_data)#64,
 
-
-# sex-combined correlation plot ----
-sel_colnames = c("VolWM_adjAgeSexICV", "nT1wSI_adjAgeSex", "MTR_adjAgeSex")
-df = braindata_adjAge_wi_AgeSex_cleaned$clean_data %>% select(all_of(sel_colnames));rm(sel_colnames)
-ind = !is.na(df[[1]])
-ind = ind | !is.na(df[[2]])
-ind = ind | !is.na(df[[3]])
-df = df[ind,]
-
-## change the order of columns 
-names(df) = c("WM-Vol", "WM-T1wSI", "WM-MTR")
-cat(names(df),sep="\n")
-subgroup = 'sex-combined'
-
-corr <- round(cor(df,use='p'), 2)
-p.mat <- cor_pmat(df)
-p.mat
-ggcorr_all = ggcorrplot(
-  corr,
-  # hc.order = TRUE,
-  type = "lower",
-  outline.color = "white",
-  ggtheme = ggplot2::theme_bw,
-  colors = c("#6D9EC1", "white", "#E46726"),
-  # p.mat = p.mat,
-  lab=TRUE,
+ggcorr_all = create_ggcorrplot (
+  data = braindata_adjAge_wi_AgeSex_cleaned$clean_data ,
+  sel_colnames = c("VolWM_adjAgeSexICV", "nT1wSI_adjAgeSex", "MTR_adjAgeSex"),
+  new_colnames = c("WM-Vol","WM-SI","WM-MTR"),
+  ID_colname = "uniqueID"
 )
 
 # female correlation plot ----
-subgroup = 'F'
-sub_ids = covdata %>% filter(Sex==subgroup)%>% pull(uniqueID)
+subgroup = 'F';sub_ids = covdata %>% filter(Sex==subgroup)%>% pull(uniqueID)
 sel_colnames = c('lobar.vol.WM.adjICV_fam','NormWM_fam','LobarWM_Z MTR_fam')
-
 braindata_adjAge_cleaned = subset(
   braindata_adjAge %>% filter(uniqueID %in% sub_ids),
   select = c('uniqueID',sel_colnames))
@@ -131,42 +108,20 @@ braindata_adjAge_cleaned $counts.NA %>% mutate(diff= after-before)
 # 2              NormWM_fam     33    33    0
 # 3       LobarWM_Z MTR_fam    124   125    1
 
-rownames.df = braindata_adjAge_cleaned$clean_data$uniqueID
-df = braindata_adjAge_cleaned$clean_data %>% select(all_of(sel_colnames))
-df = data.frame(df)
-rownames(df) = rownames.df 
-
-ind = !is.na(df[[1]])
-ind = ind | !is.na(df[[2]])
-ind = ind | !is.na(df[[3]])
-df = df[ind,]
-
-## change the order of columns 
-names(df) = c("WM-Vol", "WM-T1wSI", "WM-MTR")
-cat(names(df),sep="\n")
-
-corr <- round(cor(df,use='p'), 2)
-p.mat <- cor_pmat(df)
-p.mat
-ggcorr_female = ggcorrplot(
-  corr,
-  # hc.order = TRUE,
-  type = "lower",
-  outline.color = "white",
-  ggtheme = ggplot2::theme_bw,
-  colors = c("#6D9EC1", "white", "#E46726"),
-  # p.mat = p.mat,
-  lab=TRUE,
+ggcorr_female = create_ggcorrplot (
+  data = braindata_adjAge_cleaned$clean_data ,
+  sel_colnames = c('lobar.vol.WM.adjICV_fam','NormWM_fam','LobarWM_Z MTR_fam'),
+  new_colnames = c("WM-Vol","WM-SI","WM-MTR"),
+  ID_colname = 'uniqueID'
 )
 
 # male correlation plot ----
-subgroup = 'M'
-sub_ids = covdata %>% filter(Sex==subgroup)%>% pull(uniqueID)#496
+subgroup = 'M';sub_ids = covdata %>% filter(Sex==subgroup)%>% pull(uniqueID)#496
 sel_colnames = c('lobar.vol.WM.adjICV_fam','NormWM_fam','LobarWM_Z MTR_fam')
-
 braindata_adjAge_cleaned = subset(
   braindata_adjAge %>% filter(uniqueID %in% sub_ids),
   select = c('uniqueID',sel_colnames))
+
 braindata_adjAge_cleaned = remove.outliers_grubbs(
   braindata_adjAge_cleaned, varnames = sel_colnames)
 braindata_adjAge_cleaned $counts.NA %>% mutate(diff= after-before)
@@ -174,43 +129,19 @@ braindata_adjAge_cleaned $counts.NA %>% mutate(diff= after-before)
 # 1 lobar.vol.WM.adjICV_fam     78    78    0
 # 2              NormWM_fam     31    31    0
 # 3       LobarWM_Z MTR_fam    121   124    3
-rownames.df = braindata_adjAge_cleaned$clean_data$uniqueID
-df = braindata_adjAge_cleaned$clean_data %>% select(all_of(sel_colnames))
-df = data.frame(df)
-rownames(df) = rownames.df 
-
-ind = !is.na(df[[1]])
-ind = ind | !is.na(df[[2]])
-ind = ind | !is.na(df[[3]])
-df = df[ind,]#476
-
-## change the order of columns 
-names(df) = c("WM-Vol", "WM-T1wSI", "WM-MTR")
-cat(names(df),sep="\n")
-vnames =  names(df)
-
-## change the order of columns 
-names(df) = c("WM-Vol", "WM-T1wSI", "WM-MTR")
-cat(names(df),sep="\n")
-
-corr <- round(cor(df,use='p'), 2)
-p.mat <- cor_pmat(df)
-p.mat
-ggcorr_male = ggcorrplot(
-  corr,
-  # hc.order = TRUE,
-  type = "lower",
-  outline.color = "white",
-  ggtheme = ggplot2::theme_bw,
-  colors = c("#6D9EC1", "white", "#E46726"),
-  # p.mat = p.mat,
-  lab=TRUE,
+ggcorr_male = create_ggcorrplot (
+  data = braindata_adjAge_cleaned$clean_data ,
+  sel_colnames = sel_colnames,
+  new_colnames = c("WM-Vol","WM-SI","WM-MTR"),
+  ID_colname = 'uniqueID'
 )
-# save plot
+
+
+# create png file for all three graphs ----
 ggcorr_plot =
-  (ggcorr_all + theme(axis.text.y = element_text(size = 10)))+ 
-  (ggcorr_female+ theme(axis.text.y = element_blank())) + 
-  (ggcorr_male + theme(axis.text.y = element_blank())) + 
+  (ggcorr_all$p_ggcorr + theme(axis.text.y = element_text(size = 10)))+ 
+  (ggcorr_female$p_ggcorr + theme(axis.text.y = element_blank())) + 
+  (ggcorr_male$p_ggcorr + theme(axis.text.y = element_blank())) + 
   plot_layout(guides = 'collect') &
   theme(axis.text.x = element_text(size = 10))
 
