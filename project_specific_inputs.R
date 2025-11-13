@@ -10,22 +10,23 @@ analyst = "Jean Shin"#
 #* correlation plots 
 #** (sex-specific: correlation among adjisted and unadjusted brain phenotypes)
 
-# DATA INFORMATION ------------------------------------------------------------#
+# set up working and sub-directories ----
 # working directory(wd), file names for the brain and non-brain datasets, and missing value code
 #*[directory where the R scripts and data files are stored]
 #* The following directory is a 'cleaned' directory
-wd = "~/Library/CloudStorage/OneDrive-Personal/Lipidomic_BrainStructures_ZP"
+wd = "~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP_clean"
 dir.create(wd)
 
-project.dir = c(data.dir = 'data',
-output.dir = 'outputs',
-script.dir = 'scripts',
-result.dir = 'results')
-names.project.dir = names(project.dir)
+# defile options ----
+opt = list(
+  data.dir = file.path(wd,'data'),
+output.dir = file.path(wd,'outputs'),
+script.dir = file.path(wd,'scripts'),
+result.dir = file.path(wd,'results'),
+group_name = 'SYS_ados'
+)
 
-project.dir=file.path(wd,project.dir)
-names(project.dir) = names.project.dir
-
-lapply(project.dir,dir.create)
-#------------------------------------------------------------------------------#
+# load packages ----
+source("~/Documents/scripts/Metabolomic_BrainStructures_ZP/install_libs.R")
+source("~/Documents/scripts/Metabolomic_BrainStructures_ZP/[functions]_Rfunctions.R")
 
