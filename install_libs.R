@@ -13,7 +13,7 @@ pacman::p_load(#check if a package is installed, if not, it attempts to install 
   sessioninfo, #
   tidyverse, #readr, dplyr, ggplot2, purrr, tidyr
   optparse, psych, data.table, tableone, reshape2,
-  ggpubr,cowplot,patchwork, GGally,corrplot,ggrepel,ggpp,
+  ggpubr,cowplot,patchwork, GGally,corrplot,ggrepel,ggpp,ggcorrplot,
   hrbrthemes, #might not be installed automatically: is this necessary?
   mgcv,       #for adjusting continuous covariates using non-parametric smooth models
   lmerTest,   #for fitting regression to family-data
