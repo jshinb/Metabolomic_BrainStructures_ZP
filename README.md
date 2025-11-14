@@ -9,5 +9,4 @@ Scripts to run METABOLON CLP vs. brain microstructure phenotypes
 2. 2025-11-14: Added scripts to generate correlation plots and lipidPC-loading tables
 
 ## To-Do
-1. PCA of brain-WM associated lipids - what are the significantly loaded metabolites?
-2. 
+1. 2025-11-13: PCA of brain-WM associated lipids - what are the significantly loaded metabolites? (Are they correlated with concentrations? - Yes)
