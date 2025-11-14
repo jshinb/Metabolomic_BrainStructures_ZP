@@ -128,3 +128,48 @@ remove.outliers_grubbs <- function(dat, varnames){
   ret = list(counts.NA = counts.NA, clean_data=dat)
   ret
 }
+
+add_class2 = function(volcano_main_all){
+  metabodata_info = fread("~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/data/metabodata_info_ados.txt")
+  
+  if(sum(names(volcano_main_all)=='class')==1){
+    volcano_main_all = volcano_main_all %>% 
+      dplyr::select(-class) 
+  }
+  volcano_main_all = volcano_main_all %>% 
+    mutate(metabolite_id=str_remove(metabolite_id,"_nmol/mL")) %>%
+    left_join(
+      metabodata_info %>%
+        mutate(metabolite_id=str_remove(metabolite_id,"_nmol/mL")) %>% 
+        dplyr::select(metabolite_id,class)
+    )
+  # class2.levels = c("CE", 
+  #                   "TAG, DAG, or MAG", 
+  #                   "PC, PE, or PI",
+  #                   "LPC or LPE", 
+  #                   "SM or ceramides",
+  #                   "Nightingale")
+  class2.levels = c("Cholesteryl esters",
+                    "Acylglycerols",
+                    "Phospholipids",
+                    "Lysophospholipids",
+                    "Sphingolipids",
+                    "Inflammation/AA/metabolism")
+  volcano_main_all[['class2']] <- class2.levels[1]
+  volcano_main_all = volcano_main_all %>%
+    mutate(class2 = ifelse(class %in% c('TAG','DAG','MAG'),class2.levels[2],class2)) %>%
+    mutate(class2 = ifelse(class %in% c('PC','PE','PI'),class2.levels[3],class2)) %>%
+    mutate(class2 = ifelse(class %in% c('LPC','LPE'),class2.levels[4],class2)) %>%
+    mutate(class2 = ifelse(class %in% c('SM','CER',"DCER","HCER","LCER"),class2.levels[5],class2)) %>%
+    mutate(class2 = ifelse(class %in% c('Amino acids','Glycolysis related metabolites','Inflammation','Ketone bodies'),
+                           class2.levels[6],class2))
+  table(volcano_main_all$class,volcano_main_all$class2,useNA = 'a')
+  volcano_main_all = volcano_main_all %>%
+    mutate(`lipid class` = factor(class2,levels=class2.levels)) 
+  cols = c('#EF476F','#FFD166','#118AB2','#073B4C','#06D6A0','#8f00ff')
+  
+  class2.labels = paste(names(table(volcano_main_all$`lipid class`))," (n=",
+                        table(volcano_main_all$`lipid class`),")",sep='')
+  ret=(list(volcano_main_all=volcano_main_all,class2.labels=class2.labels,cols=cols))
+  ret
+}
