@@ -14,7 +14,7 @@ analyst = "Jean Shin"#
 # working directory(wd), file names for the brain and non-brain datasets, and missing value code
 #*[directory where the R scripts and data files are stored]
 #* The following directory is a 'cleaned' directory
-wd = "~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP_clean"
+wd = "~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP"
 dir.create(wd)
 
 # defile options ----
