@@ -129,8 +129,12 @@ remove.outliers_grubbs <- function(dat, varnames){
   ret
 }
 
-add_class2 = function(volcano_main_all){
-  metabodata_info = fread("~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/data/metabodata_info_ados.txt")
+add_class2 = function(volcano_main_all,generation="ados"){
+  if(generation=="ados"){
+    metabodata_info = fread("~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/data/metabodata_info_ados.txt")
+  }else{
+    metabodata_info = fread("~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/data/metabodata_info_adults.txt")
+  }
   
   if(sum(names(volcano_main_all)=='class')==1){
     volcano_main_all = volcano_main_all %>% 
