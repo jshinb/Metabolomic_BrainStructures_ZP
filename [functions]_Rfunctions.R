@@ -153,20 +153,34 @@ add_class2 = function(volcano_main_all,generation="ados"){
   #                   "LPC or LPE", 
   #                   "SM or ceramides",
   #                   "Nightingale")
+  class1.levels = c("TAG", "DAG", "MAG", 
+             "CE", "PC", "PE", "PI", 
+             "LPC", "LPE", 
+             "SM", "CER", "HCER", "LCER", "DCER", 
+             "Other")
+  volcano_main_all = volcano_main_all %>% 
+    mutate(class1 = 
+             ifelse(
+               class %in% 
+                 c('Amino acids','Glycolysis related metabolites','Inflammation','Ketone bodies'), 
+               "Other",
+               class)) %>% 
+    mutate(class1 = factor(class1,levels = class1.levels))
   class2.levels = c("Cholesteryl esters",
                     "Acylglycerols",
                     "Phospholipids",
                     "Lysophospholipids",
                     "Sphingolipids",
                     "Inflammation/AA/metabolism")
-  volcano_main_all[['class2']] <- class2.levels[1]
   volcano_main_all = volcano_main_all %>%
-    mutate(class2 = ifelse(class %in% c('TAG','DAG','MAG'),class2.levels[2],class2)) %>%
-    mutate(class2 = ifelse(class %in% c('PC','PE','PI'),class2.levels[3],class2)) %>%
-    mutate(class2 = ifelse(class %in% c('LPC','LPE'),class2.levels[4],class2)) %>%
-    mutate(class2 = ifelse(class %in% c('SM','CER',"DCER","HCER","LCER"),class2.levels[5],class2)) %>%
-    mutate(class2 = ifelse(class %in% c('Amino acids','Glycolysis related metabolites','Inflammation','Ketone bodies'),
-                           class2.levels[6],class2))
+    mutate(class2 = case_when(
+      class %in% c('CE') ~ class2.levels[1],
+      class %in% c('TAG','DAG','MAG') ~ class2.levels[2],
+      class %in% c('PC','PE','PI') ~ class2.levels[3],
+      class %in% c('LPC','LPE') ~ class2.levels[4],
+      class %in% c('SM','CER',"DCER","HCER","LCER") ~ class2.levels[5],
+      class %in% c('Amino acids','Glycolysis related metabolites','Inflammation','Ketone bodies') ~ class2.levels[6]
+    ))
   table(volcano_main_all$class,volcano_main_all$class2,useNA = 'a')
   volcano_main_all = volcano_main_all %>%
     mutate(`lipid class` = factor(class2,levels=class2.levels)) 
@@ -174,6 +188,13 @@ add_class2 = function(volcano_main_all,generation="ados"){
   
   class2.labels = paste(names(table(volcano_main_all$`lipid class`))," (n=",
                         table(volcano_main_all$`lipid class`),")",sep='')
-  ret=(list(volcano_main_all=volcano_main_all,class2.labels=class2.labels,cols=cols))
+  class1_cols <- c("#FFD166", "#118AB2", "#06D6A0", "#F0E442", "#0072B2", "#D55E00", "#EF476F",
+                   "#1F77B4", "#FF7F0E", "#073B4C", "#D62728", "#8f00ff", "#8C564B", "#E377C2")
+  class1.labels = paste(names(table(volcano_main_all$class1))," (n=",
+                        table(volcano_main_all$class1),")",sep='')
+  ret=(list(volcano_main_all=volcano_main_all,
+            class2.labels=class2.labels,cols=cols,
+            class1_cols = class1_cols,
+            class1.labels = class1.labels))
   ret
 }

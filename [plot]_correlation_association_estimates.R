@@ -9,7 +9,6 @@ project_specific_file = "~/Documents/scripts/Metabolomic_BrainStructures_ZP/proj
 source(project_specific_file)
 setwd(wd)
 
-
 # load lipid-brain association results (sex-combined) ----
 load("results/volcanoplot_all_NormWM_sex-combined_ados_unadjBMI_unadjICV_2025-03-26.Rdata")
 volcano_main_NormWM = volcano_main
@@ -90,8 +89,8 @@ beta_3brain_M =  volcano_main_lobarVolWM_M$data %>% select(metabolite_id,beta) %
   left_join(volcano_main_MTR_WM_M$data %>% select(metabolite_id,beta) %>% rename(beta_MTR.WM=beta), 
             join_by(metabolite_id))
 
-## correlation plot
-new_colnames_beta = c("WM-Vol","WM-SI","WM-MTR")
+# correlation plot ----
+new_colnames_beta = c("WM-Vol","WM-T1wSI","WM-MTR")
 ggcorr_all = create_ggcorrplot (
   data = volcano_main_3brain ,
   sel_colnames = c("beta.Vol","beta.nT1wSI","beta.MTR"),
