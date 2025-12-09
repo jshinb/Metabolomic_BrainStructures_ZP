@@ -46,17 +46,21 @@ TAG_fa = TAG_fa %>% select(metabolite,ARA,DHA,dbl.cb.bonds,total.n.cb,tag_db,tag
 head(TAG_fa)
 TAG_fa = TAG_fa %>% filter(!is.na(PC3))
 TAG_fa %>% describe()
-TAG_fa[['ARA.or.DHA']] = ""
-TAG_fa$ARA.or.DHA[TAG_fa$ARA=="ARA-present"] <- "ARA"
-TAG_fa$ARA.or.DHA[TAG_fa$DHA=="DHA-present"] <- "DHA"
+TAG_fa[['ARA.or.DHA']] = "Without ARA or DHA"
+TAG_fa$ARA.or.DHA[TAG_fa$ARA=="ARA-present"] <- "ARA-present"
+TAG_fa$ARA.or.DHA[TAG_fa$DHA=="DHA-present"] <- "DHA-present"
+TAG_fa = TAG_fa %>% 
+  mutate(ARA.or.DHA=factor(ARA.or.DHA,levels = c("Without ARA or DHA","ARA-present","DHA-present")))
 table(TAG_fa$ARA.or.DHA)
 
 # generate plots ----
-my_colors <- c("ARA" = "#0072B2", "DHA" = "#D55E00") # Blue and Orange
-# my_colors <- c("ARA" = "#702963", "DHA" = "#296370") # Blue and Orange
+box.n.size = 4
+
+my_colors <- c("ARA-present" = "#0072B2", "DHA-present" = "#D55E00") # Blue and Orange
+# my_colors <- c("ARA-present" = "#702963", "DHA-present" = "#296370") # Blue and Orange
 p_n_cb = ggplot()  + 
   geom_point(data=TAG_fa,aes(x=tagC,y=PC3),alpha=0.3) + 
-  geom_point(data=TAG_fa %>% filter(ARA.or.DHA!=""),
+  geom_point(data=TAG_fa %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=tagC,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -68,7 +72,7 @@ p_n_cb
 
 p_n_db = ggplot()  + 
   geom_point(data=TAG_fa,aes(x=tag_db,y=PC3),alpha=0.3) + 
-  geom_point(data=TAG_fa %>% filter(ARA.or.DHA!=""),
+  geom_point(data=TAG_fa %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=tag_db,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) +
@@ -124,8 +128,39 @@ p_ARA + p_DHA +  p_n_db + p_n_cb +
   plot_layout(axes = "collect",guides="collect") &
   coord_cartesian(ylim = boxplot.ymax*c(-0.85,1))
 
-# create PNG file in 'output' folder ----
-ggsave('outputs/figSX_PC3_loadings_TAG.png',
+# ggsave('outputs/figSX_PC3_loadings_TAG.png',
+#        height=13.03*1.75*0.75,width=17.07*2**0.65,units='cm',
+#        dpi=300)
+
+# boxplot: [figure 2025-12-05] ----
+plot_sample_sizes <- 
+  TAG_fa %>% mutate(x=ARA.or.DHA) %>%
+  select(x,PC3) %>%
+  group_by(x) %>%
+  summarise(n = n())
+p_boxplot = TAG_fa %>% 
+  # mutate(x=as.character(pl_db)) %>%
+  mutate(x=ARA.or.DHA) %>%
+  ggplot(aes(x=x,y=PC3,fill=x))+ 
+  geom_hline(yintercept = 0, linewidth=0.1, color="grey30") +
+  geom_boxplot(alpha=0.3,outlier.shape = NA) +
+  geom_point(alpha=0.3) + 
+  # geom_point(data=TAG_fa %>%  
+  #              mutate(x=ARA.or.DHA) %>%
+  #              filter(ARA.or.DHA!="Without ARA/DHA"),
+  #            aes(x=x,y=PC1,color=ARA.or.DHA),
+  #            alpha=0.7,pch=21,stroke=1.5,size=2) + 
+  # scale_color_manual(values=my_colors) + 
+  scale_fill_manual(values=my_colors) +
+  geom_text(data = plot_sample_sizes, 
+            aes(x=x, y=boxplot.ymax, label = paste0("(",n," TAGs)")),
+            vjust = 1.5,  # Adjust vertical position of text
+            size = box.n.size) +  # Adjust text size
+  xlab(NULL)+ theme_bw() + theme(legend.position="none")
+
+p_boxplot + (p_n_cb+p_n_db) + plot_layout(nrow = 2,axes='collect',guides='collect')
+
+ggsave('outputs/figS3_PC3_loadings_TAG.png',
        height=13.03*1.75*0.75,width=17.07*2**0.65,units='cm',
        dpi=300)
 #smooth plots ----
@@ -140,15 +175,15 @@ CE_fa = PC_loadings_616 %>% filter(class=="CE") %>%
   mutate(ce_db = as.numeric(str_split(ce_db,":",simplify = T)[,2])) %>%
   mutate(ARA = ifelse(str_detect(metabolite_id,"20:4"),"ARA-present","ARA-absent")) %>%
   mutate(DHA = ifelse(str_detect(metabolite_id,"22:6"),"DHA-present","DHA-absent"))
-CE_fa[['ARA.or.DHA']] = ""
-CE_fa$ARA.or.DHA[CE_fa$ARA=="ARA-present"] <- "ARA"
-CE_fa$ARA.or.DHA[CE_fa$DHA=="DHA-present"] <- "DHA"
+CE_fa[['ARA.or.DHA']] = "Without ARA or DHA"
+CE_fa$ARA.or.DHA[CE_fa$ARA=="ARA-present"] <- "ARA-present"
+CE_fa$ARA.or.DHA[CE_fa$DHA=="DHA-present"] <- "DHA-present"
 CE_fa = CE_fa %>% left_join(PC_loadings_616,join_by(metabolite_id))
 
 p_ce_cb = 
   ggplot()  + 
   geom_point(data=CE_fa,aes(x=ceC,y=PC3),alpha=0.3) + 
-  geom_point(data=CE_fa %>% filter(ARA.or.DHA!=""),
+  geom_point(data=CE_fa %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=ceC,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -163,7 +198,7 @@ p_ce_cb
 p_ce_db = 
   ggplot()  + 
   geom_point(data=CE_fa,aes(x=ce_db,y=PC3),alpha=0.3) + 
-  geom_point(data=CE_fa %>% filter(ARA.or.DHA!=""),
+  geom_point(data=CE_fa %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=ce_db,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -188,14 +223,14 @@ PL_fa =
   mutate(DHA = ifelse((pl_fa1=="22:6"|pl_fa2=="22:6"),"DHA-present","DHA-absent")) %>%
   mutate(plC = as.numeric(str_split(pl_fa1,":",simplify = T)[,1]) + as.numeric(str_split(pl_fa2,":",simplify = T)[,1])) %>%
   mutate(pl_db = as.numeric(str_split(pl_fa1,":",simplify = T)[,2]) + as.numeric(str_split(pl_fa2,":",simplify = T)[,2]))
-PL_fa[['ARA.or.DHA']] = ""
-PL_fa$ARA.or.DHA[PL_fa$ARA=="ARA-present"] <- "ARA"
-PL_fa$ARA.or.DHA[PL_fa$DHA=="DHA-present"] <- "DHA"
+PL_fa[['ARA.or.DHA']] = "Without ARA or DHA"
+PL_fa$ARA.or.DHA[PL_fa$ARA=="ARA-present"] <- "ARA-present"
+PL_fa$ARA.or.DHA[PL_fa$DHA=="DHA-present"] <- "DHA-present"
 PL_fa = PL_fa %>% left_join(PC_loadings_616,join_by(metabolite_id))
 p_pl_cb = 
   ggplot()  + 
   geom_point(data=PL_fa,aes(x=plC,y=PC3),alpha=0.3) + 
-  geom_point(data=PL_fa %>% filter(ARA.or.DHA!=""),
+  geom_point(data=PL_fa %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=plC,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -210,7 +245,7 @@ p_pl_cb
 p_pl_db = 
   ggplot() + 
   geom_point(data=PL_fa,aes(x=pl_db,y=PC3),alpha=0.3) + 
-  geom_point(data=PL_fa %>% filter(ARA.or.DHA!=""),
+  geom_point(data=PL_fa %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=pl_db,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -243,7 +278,7 @@ box_ce_cb =
   ggplot(aes(x=x,y=PC3))+
   geom_boxplot(alpha=0.3,outlier.shape = NA) +
   geom_point(alpha=0.3) + 
-  geom_point(data=CE_fa %>%  mutate(x=as.character(ceC)) %>% filter(ARA.or.DHA!=""),
+  geom_point(data=CE_fa %>%  mutate(x=as.character(ceC)) %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=x,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -265,7 +300,7 @@ box_ce_db = CE_fa %>% mutate(x=as.character(ce_db)) %>%
   ggplot(aes(x=x,y=PC3))+
   geom_boxplot(alpha=0.3,outlier.shape = NA) +
   geom_point(alpha=0.3) + 
-  geom_point(data=CE_fa %>%  mutate(x=as.character(ce_db)) %>% filter(ARA.or.DHA!=""),
+  geom_point(data=CE_fa %>%  mutate(x=as.character(ce_db)) %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=x,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -286,7 +321,7 @@ box_pl_cb = PL_fa %>% mutate(x=as.character(plC)) %>%
   ggplot(aes(x=x,y=PC3))+
   geom_boxplot(alpha=0.3,outlier.shape = NA) +
   geom_point(alpha=0.3) + 
-  geom_point(data=PL_fa %>%  mutate(x=as.character(plC)) %>% filter(ARA.or.DHA!=""),
+  geom_point(data=PL_fa %>%  mutate(x=as.character(plC)) %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=x,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -309,7 +344,7 @@ box_pl_db =
   ggplot(aes(x=x,y=PC3))+
   geom_boxplot(alpha=0.3,outlier.shape = NA) +
   geom_point(alpha=0.3) + 
-  geom_point(data=PL_fa %>%  mutate(x=as.character(pl_db)) %>% filter(ARA.or.DHA!=""),
+  geom_point(data=PL_fa %>%  mutate(x=as.character(pl_db)) %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=x,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -337,7 +372,7 @@ PL_fa %>%
   geom_point(alpha=0.3) + 
   geom_point(data=PL_fa %>%  
                mutate(x=ARA.or.DHA) %>%
-               filter(ARA.or.DHA!=""),
+               filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=x,y=PC3,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 

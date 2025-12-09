@@ -46,16 +46,18 @@ TAG_fa = TAG_fa %>% select(metabolite,ARA,DHA,dbl.cb.bonds,total.n.cb,tag_db,tag
 head(TAG_fa)
 TAG_fa = TAG_fa %>% filter(!is.na(PC1))
 TAG_fa %>% describe()
-TAG_fa[['ARA.or.DHA']] = ""
-TAG_fa$ARA.or.DHA[TAG_fa$ARA=="ARA-present"] <- "ARA"
-TAG_fa$ARA.or.DHA[TAG_fa$DHA=="DHA-present"] <- "DHA"
+TAG_fa[['ARA.or.DHA']] = "Without ARA or DHA"
+TAG_fa$ARA.or.DHA[TAG_fa$ARA=="ARA-present"] <- "ARA-present"
+TAG_fa$ARA.or.DHA[TAG_fa$DHA=="DHA-present"] <- "DHA-present"
+TAG_fa = TAG_fa %>% 
+  mutate(ARA.or.DHA = factor(ARA.or.DHA,levels=c("Without ARA or DHA",'ARA-present','DHA-present')))
 table(TAG_fa$ARA.or.DHA)
 
-my_colors <- c("ARA" = "#0072B2", "DHA" = "#D55E00") # Blue and Orange
-# my_colors <- c("ARA" = "#702963", "DHA" = "#296370") # Blue and Orange
+my_colors <- c("ARA-present" = "#0072B2", "DHA-present" = "#D55E00") # Blue and Orange
+# my_colors <- c("ARA-present" = "#702963", "DHA-present" = "#296370") # Blue and Orange
 p_n_cb = ggplot()  + 
   geom_point(data=TAG_fa,aes(x=tagC,y=PC1),alpha=0.3) + 
-  geom_point(data=TAG_fa %>% filter(ARA.or.DHA!=""),
+  geom_point(data=TAG_fa %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=tagC,y=PC1,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -66,7 +68,7 @@ p_n_cb
 
 p_n_db = ggplot()  + 
   geom_point(data=TAG_fa,aes(x=tag_db,y=PC1),alpha=0.3) + 
-  geom_point(data=TAG_fa %>% filter(ARA.or.DHA!=""),
+  geom_point(data=TAG_fa %>% filter(ARA.or.DHA!="Without ARA or DHA"),
              aes(x=tag_db,y=PC1,color=ARA.or.DHA),
              alpha=0.7,pch=21,stroke=1.5,size=2) + 
   scale_color_manual(values=my_colors) + 
@@ -116,6 +118,41 @@ p_DHA
 
 p_ARA + p_DHA +  p_n_db + p_n_cb + 
   plot_layout(axes = "collect",guides="collect")
+
+ggsave('outputs/figS3_PC1_loadings_TAG.png',
+       height=13.03*1.75*0.75,width=17.07*2**0.65,units='cm',
+       dpi=300)
+
+# boxplot with three categories ----
+boxplot.ymax = 1.05
+box.n.size = 4
+## PC1 ----
+plot_sample_sizes <- 
+  TAG_fa %>% mutate(x=ARA.or.DHA) %>%
+  select(x,PC1) %>%
+  group_by(x) %>%
+  summarise(n = n())
+p_boxplot = TAG_fa %>% 
+  # mutate(x=as.character(pl_db)) %>%
+  mutate(x=ARA.or.DHA) %>%
+  ggplot(aes(x=x,y=PC1,fill=x))+ 
+  geom_hline(yintercept = 0, linewidth=0.1, color="grey30") +
+  geom_boxplot(alpha=0.3,outlier.shape = NA) +
+  geom_point(alpha=0.3) + 
+  # geom_point(data=TAG_fa %>%  
+  #              mutate(x=ARA.or.DHA) %>%
+  #              filter(ARA.or.DHA!="Without ARA or DHA"),
+  #            aes(x=x,y=PC1,color=ARA.or.DHA),
+  #            alpha=0.7,pch=21,stroke=1.5,size=2) + 
+  # scale_color_manual(values=my_colors) + 
+  scale_fill_manual(values=my_colors) +
+  geom_text(data = plot_sample_sizes, 
+            aes(x=x, y=boxplot.ymax, label = paste0("(",n," TAGs)")),
+            vjust = 1.5,  # Adjust vertical position of text
+            size = box.n.size) +  # Adjust text size
+  xlab(NULL)+ theme_bw() + theme(legend.position="none")
+
+p_boxplot + (p_n_cb+p_n_db) + plot_layout(nrow = 2,axes='collect',guides='collect')
 
 ggsave('outputs/figS3_PC1_loadings_TAG.png',
        height=13.03*1.75*0.75,width=17.07*2**0.65,units='cm',
@@ -196,13 +233,13 @@ not.used = function(){
   df_ara <- df %>%
     group_by(PC1_bin) %>%
     summarise(proportion = mean(ARA_present)) %>%
-    mutate(category = "ARA", feature = "ARA")
+    mutate(category = "ARA-present", feature = "ARA-present")
   
   # DHA
   df_dha <- df %>%
     group_by(PC1_bin) %>%
     summarise(proportion = mean(DHA_present)) %>%
-    mutate(category = "DHA", feature = "DHA")
+    mutate(category = "DHA-present", feature = "DHA-present")
   
   # Double bonds
   df_db <- df %>%
