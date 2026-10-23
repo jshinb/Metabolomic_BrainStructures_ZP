@@ -1,6 +1,6 @@
 #-----------------------------------------------------------------@
 # Created: 2026-10-23
-# Test genetic association between FADS1 locus vs. compVar2 (PCA of WM.PC1 and Met.PC3)
+# Test genetic association between FADS1 locus vs. compVar2adjBMI (PCA of WM.PC1 and Met.PC3)
 #-----------------------------------------------------------------@
 
 library(data.table)
