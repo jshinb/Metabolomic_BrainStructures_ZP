@@ -13,15 +13,20 @@ set.seed(2026)
 # function to run the same association model under a matched sample size
 run_matched_n_test <- function(dat_large, dat_small, trait_name, metabolite_name, n_iter = 500) {
   out <- list()
-  
+  #dat_small used for the size only
   for (i in seq_len(n_iter)) {
-    idx <- sample(seq_len(nrow(dat_large)), size = nrow(dat_small), replace = FALSE)
+    analdat_large = dat_large %>% select(all_of(c('uniqueID',trait_name,metabolite_name,'age.c','age.c2','Sex')))
+    analdat_small = dat_small %>% select(all_of(c('uniqueID',trait_name,metabolite_name,'age.c','age.c2','Sex')))
+    match.size = nrow(na.omit(analdat_small))
+    dat_large = na.omit(analdat_large)
+    
+    idx <- sample(seq_len(nrow(dat_large)), size = match.size, replace = FALSE)
     dat <- dat_large[idx, ]
     
     dat[["y.rnt"]] <- inormal(dat[[trait_name]])
     dat[["m"]] <- inormal(dat[[metabolite_name]])
     
-    fit <- lm(y.rnt ~ m + (age.c + age.c2) + Sex, data = dat)
+    fit <- lm(y.rnt ~ m + (age.c + age.c2) * Sex, data = dat)
     coef_tmp <- summary(fit)$coef["m", ]
     
     out[[i]] <- data.frame(
