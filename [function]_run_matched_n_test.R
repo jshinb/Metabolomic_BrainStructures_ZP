@@ -13,7 +13,6 @@ set.seed(2026)
 # function to run the same association model under a matched sample size
 run_matched_n_test <- function(dat_large, dat_small, trait_name, metabolite_name, n_iter = 500) {
   out <- list()
-  #dat_small used for the size only
   for (i in seq_len(n_iter)) {
     analdat_large = dat_large %>% select(all_of(c('uniqueID',trait_name,metabolite_name,'age.c','age.c2','Sex')))
     analdat_small = dat_small %>% select(all_of(c('uniqueID',trait_name,metabolite_name,'age.c','age.c2','Sex')))
