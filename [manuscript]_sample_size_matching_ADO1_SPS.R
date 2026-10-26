@@ -10,9 +10,6 @@ set.seed(2026)
 # trait: e.g. "Volume.WM.adjAgeSexICV" or "T1wSI.WM.adjAgeSex"
 # metabolite_list: vector of key metabolites from ADO1 findings
 
-# Use adult sample size as the target
-n_target <- nrow(SPS_dat)
-
 # function to run the same association model under a matched sample size
 run_matched_n_test <- function(dat_large, dat_small, trait_name, metabolite_name, n_iter = 500) {
   out <- list()
