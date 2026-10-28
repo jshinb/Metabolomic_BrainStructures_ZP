@@ -1,3 +1,4 @@
+# rm(list=ls())
 #*****************************************************************************#
 # updated: 2026-10-07 to address NatCommuns reviewers' comments
 # Load inputs and set working directories: CHANGE HERE ----
@@ -1144,8 +1145,10 @@ compvar = compvar %>%
   left_join(
     adj.metabo %>% select(uniqueID,`TAG50:3FA18:2`,`TAG50:4FA20:4`,
                           `TAG54:7FA16:1`,`LPC(18:2)`) %>% 
-      left_join(covdata_all %>% select(uniqueID,fam_id,BMI)) %>%
-      mutate(IID = as.integer(str_split(uniqueID,"_",simplify = T)[,2]))) 
+      left_join(fread('data/covdata_ados.txt') %>% select(uniqueID,fam_id,BMI) %>%
+                  mutate(IID = as.integer(str_split(uniqueID,"_",simplify = T)[,2])))
+      # left_join(covdata_all %>% select(uniqueID,fam_id,BMI)) %>%
+      ) 
 
 # compvar = compvar %>% 
 #   left_join(
