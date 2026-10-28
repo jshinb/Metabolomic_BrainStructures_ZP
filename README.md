@@ -15,6 +15,8 @@ Scripts to run METABOLON CLP vs. brain microstructure phenotypes
    a. Table S1 (association result table for the 6 phenotype (WM- and GM-Volume, T1wSI and MTR).
    b. P-values
    c. Numbers of (FDR-significant) lipids associated with each WM-phenotype
+3. Response to reviewers
+   a. Flipping WM.PC1, Met.PC3 --> compVar2???
 
 ## NOTES for later
 1. Adult brain WM phenotypes were taken from TNTpipeline (2019) after the conversation with Tomas in May 2025: n=456.
