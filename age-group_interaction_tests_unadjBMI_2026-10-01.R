@@ -6,6 +6,8 @@ project_specific_file = "~/Documents/scripts/Metabolomic_BrainStructures_ZP/proj
 ## Excel file: Age_group_by_lipid_interaction_test_pvalues_2026-11-03.xlsx
 ## Output: z_diff_and_interaction_assoc_test_results_2026-11-03.txt
 ## Sent to Zdenka
+## Get data from: ~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/get_data_for_interaction_test_2026-11-03.R
+
 #*****************************************************************************#
 
 # 0. initialize ----
@@ -78,10 +80,15 @@ class2.labels = paste(names(table(res_WM1 %>% filter(ind_ado1) %>% pull(`lipid c
 
 
 # get the association results for the bmi-unadjusted analyses ----
+## NOTE - modified the interaction tests - ranking within age-group to address 
+## pipeline-differences
+
 brain_phenos = c("Volume.WM.adjAgeSexICV", "T1wSI.WM.adjAgeSex", "MTR.WM.adjAgeSex")
 run.test = function(){
   for (bi in brain_phenos){
-    
+    anal.date = '2026-11-03'
+    load(file=paste0('data/data_for_interaction_tests_',anal.date,'.Rdata'),verbose = T)
+    brain_phenos = c("Volume.WM.adjAgeSexICV", "T1wSI.WM.adjAgeSex", "MTR.WM.adjAgeSex")
     metabo.by.group.bmi <- c(); for (i in 1:nrow(res_WM1)){#i=1;mi = 'TAG54:7FA16:1'#res_WM1$metaboliteid[i]
       mi = res_WM1$metaboliteid[i]
       analdat = covdata_all %>% 
@@ -98,31 +105,29 @@ run.test = function(){
       metabo.adjMed = data.frame(uniqueID = names(resid(fit1)),
                                  x.adjMed=resid(fit1)+ summary(fit1)$coef["(Intercept)","Estimate"])
       analdat = analdat %>% left_join(metabo.adjMed)
-      analdat = analdat %>% mutate(x.adjMed=ifelse(group=="ado",x,x.adjMed)) %>%
-        mutate(rnt.y = inormal(y),rnt.x = inormal(x.adjMed))
+      analdat = analdat %>%
+        mutate(x.adjMed = ifelse(group == "ado", x, x.adjMed)) %>%
+        group_by(group) %>%
+        mutate(
+          rnt.y = inormal(y),
+          rnt.x = inormal(x.adjMed)
+        ) %>%
+        ungroup()
       
       analdat %>% ggplot(aes(x=x, y=x.adjMed,color=group)) + geom_point(alpha=0.3)
       analdat %>% ggplot(aes(x=rnt.x, y=rnt.y,color=group)) + geom_point(alpha=0.3) +
         stat_cor() + geom_smooth(method="gam")
       
       ## ado fit ----@
-      # fit.ado = lmer(rnt.y~rnt.x + Sex + (1|fam_id), 
-      #                data=analdat %>% filter(group=="ado"));
-      fit.ado = lmer(inormal(y)~inormal(x) + Sex + (1|fam_id),
+      fit.ado = lmer(rnt.y~rnt.x + Sex + (1|fam_id),
                      data=analdat %>% filter(group=="ado"));
-      summary(fit.ado)
-      summary(fit.ado)$coef["inormal(x)",]
-      # summary(fit.ado)$coef["rnt.x",]
+      summary(fit.ado)$coef["rnt.x",]
       
       ## adult fit ----@
-      # fit.adult = lm(rnt.y~rnt.x + Sex, 
-      #                data=analdat %>% filter(group=="adult"));
-      fit.adult = lm(inormal(y)~inormal(x) + Sex, 
+      fit.adult = lm(rnt.y~rnt.x + Sex,
                      data=analdat %>% filter(group=="adult"));
-      summary(fit.adult)
-      # summary(fit.adult)$coef["rnt.x",]
-      summary(fit.adult)$coef["inormal(x)",]
-      
+      summary(fit.adult)$coef["rnt.x",]
+
       ## interaction test ----@
       fit.interact = lmer(rnt.y~rnt.x*group + Sex + (1|fam_id), 
                           data=analdat);summary(fit.interact)
@@ -151,8 +156,8 @@ run.test = function(){
       z.abs.diff.ado.adult = D/SE_D
       p_one_sided <- pnorm(z.abs.diff.ado.adult,lower.tail = F)
       
-      fit.res.ado = summary(fit.ado)$coef["inormal(x)",];
-      fit.res.adult = summary(fit.adult)$coef["inormal(x)",]
+      fit.res.ado = summary(fit.ado)$coef["rnt.x",];
+      fit.res.adult = summary(fit.adult)$coef["rnt.x",]
       fit.res.interact = summary(fit.interact)$coef["rnt.x:groupadult",]
       names(fit.res.ado) = paste(c('beta','se','df','t','pval'),'ado',sep='.')
       names(fit.res.adult) = paste(c('beta','se','t','pval'),'adult',sep='.')
@@ -169,7 +174,6 @@ run.test = function(){
             c(abs.diff=D,abs.diff_se=SE_D,z.abs.diff=z.abs.diff.ado.adult,abs.diff.pval=p_one_sided)
           ))
     }
-    
     metabo.by.group.bmi =  metabo.by.group.bmi %>% data.table
     metabo.by.group.bmi %>% head
     metabo.by.group.bmi = metabo.by.group.bmi %>% mutate(across(-c(1:2), as.numeric))
@@ -179,8 +183,11 @@ run.test = function(){
       write_tsv(paste0('results/assoc_lipid_',bi,'_stratified_interaction_unadjBMI_',Sys.Date(),".txt"))
   }
 }
+#run.test()
 #"~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/get.assoc_unadjBMI_2026-10-01.R"
-anal.date = '2026-10-01'
+# anal.date = '2026-10-01'# rank across group
+anal.date = '2026-11-03'# rank within group
+
 int.files_unadjBMI=c(
   paste0('results/assoc_lipid_',brain_phenos[1],'_stratified_interaction_unadjBMI_',anal.date,".txt"),
   paste0('results/assoc_lipid_',brain_phenos[2],'_stratified_interaction_unadjBMI_',anal.date,".txt"),
@@ -317,6 +324,33 @@ age_group_stratified_res %>%
   select(all_of(to_write_sel_colnames)) %>%
   write_tsv(file=paste0('results/beta_diff_and_interaction_test_results_',Sys.Date(),'.txt'))
 
+# compare interaction vs. heterogeneity test p-values ----
+anal.date = "2026-11-03"; diff_int_res_fname = paste0('results/beta_diff_and_interaction_test_results_',anal.date,'.txt')
+diff_int_res = fread(diff_int_res_fname)
+p1=diff_int_res  %>% 
+  ggplot(aes(x=-log10(pval_WM.Vol_diff),y=-log10(pval.int.WM.Vol))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+p2=diff_int_res  %>% 
+  ggplot(aes(x=-log10(pval_WM.T1wSI_diff),y=-log10(pval.int.WM.T1wSI))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+p3=diff_int_res  %>% 
+  ggplot(aes(x=-log10(pval_WM.MTR_diff),y=-log10(pval.int.WM.MTR))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+
+plot.lims = c(0,max(-log10(diff_int_res$pval.int.WM.T1wSI)))
+p1+p2+p3 +
+  plot_layout(ncol=3,axes = 'collect') &
+  coord_cartesian(xlim=plot.lims,ylim=plot.lims) &
+  ggpubr::stat_cor(
+    method = "spearman",
+    label.x = plot.lims[1],
+    label.y = plot.lims[2]*1.035,
+    hjust = 0,
+    vjust = 1
+  )
 # numbers of lipids diff assoc with ados vs. adults ----
 ind1 = to_write$fdr.p.int.WM.Vol <0.05;print(sum(ind1))#58
 ind1 = ind1 | to_write$fdr.p.int.WM.T1wSI <0.05;print(sum(ind1))#91
@@ -411,3 +445,4 @@ interact_res_wide %>% filter(metaboliteid=="CE(18:4)") %>%
 
 to_write %>% filter(metaboliteid=="CE(18:4)") %>%
   select(metaboliteid,contains('MTR')) %>% select(contains('beta'))
+
