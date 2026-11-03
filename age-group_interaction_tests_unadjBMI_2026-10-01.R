@@ -4,6 +4,7 @@
 #* [Put the full path of the input file]
 project_specific_file = "~/Documents/scripts/Metabolomic_BrainStructures_ZP/project_specific_inputs.R"
 ## Excel file: Age_group_by_lipid_interaction_test_pvalues_2026-11-03.xlsx
+## Output: z_diff_and_interaction_assoc_test_results_2026-11-03.txt
 ## Sent to Zdenka
 #*****************************************************************************#
 
@@ -268,11 +269,55 @@ to_write = merged_assoc_res %>%
   select(all_of(selcol_names))%>%
   filter(metaboliteid!='GlycA')
 
-to_write %>% 
+# group-specific tests of difference in age-group specific asso. estimates ----
+to_write_sel_colnames=
+  c("metaboliteid", "lipid class", "signif_ado",
+    ## Volume
+    "beta_WM.Vol_ados", "beta_WM.Vol_adults", 
+    "pval_WM.Vol_diff", "fdr.p_WM.Vol_diff", 
+    "pval.int.WM.Vol", "fdr.p.int.WM.Vol", 
+    ## T1wSI
+    "beta_WM.T1wSI_ados", "beta_WM.T1wSI_adults", 
+    "pval_WM.T1wSI_diff", "fdr.p_WM.T1wSI_diff",
+    "pval.int.WM.T1wSI", "fdr.p.int.WM.T1wSI",
+    ## MTR
+    "beta_WM.MTR_ados", "beta_WM.MTR_adults", 
+    "pval_WM.MTR_diff", "fdr.p_WM.MTR_diff",
+    "pval.int.WM.MTR", "fdr.p.int.WM.MTR"
+);to_write %>% 
   mutate(signif_ado = ifelse(metaboliteid%in%sig_lipids,TRUE,FALSE)) %>%
-  relocate(metaboliteid,`lipid class`,signif_ado) %>%
-  write_tsv(file=paste0('results/stratified_interaction_assoc_test_results_',Sys.Date(),'.txt'))
+  relocate(metaboliteid,`lipid class`,signif_ado) %>% 
+  left_join(
+age_group_stratified_res %>% 
+  mutate(
+    beta_WM.Vol_diff = beta_WM.Vol_ados - beta_WM.Vol_adults,
+    se_WM.Vol_diff = sqrt(se_WM.Vol_ados^2 + se_WM.Vol_adults^2),
+    z_WM.Vol_diff = (beta_WM.Vol_diff/se_WM.Vol_diff),
+    pval_WM.Vol_diff = 2*pnorm(abs(z_WM.Vol_diff),lower.tail=F),
+    ##
+    beta_WM.T1wSI_diff = beta_WM.T1wSI_ados - beta_WM.T1wSI_adults,
+    se_WM.T1wSI_diff = sqrt(se_WM.T1wSI_ados^2 + se_WM.T1wSI_adults^2),
+    z_WM.T1wSI_diff = (beta_WM.T1wSI_diff/se_WM.T1wSI_diff),
+    pval_WM.T1wSI_diff = 2*pnorm(abs(z_WM.T1wSI_diff),lower.tail=F),
+    ##
+    beta_WM.MTR_diff = beta_WM.MTR_ados - beta_WM.MTR_adults,
+    se_WM.MTR_diff = sqrt(se_WM.MTR_ados^2 + se_WM.MTR_adults^2),
+    z_WM.MTR_diff = (beta_WM.MTR_diff/se_WM.MTR_diff),
+    pval_WM.MTR_diff = 2*pnorm(abs(z_WM.MTR_diff),lower.tail=F)
+  ) %>%
+  mutate(
+    fdr.p_WM.Vol_diff = p.adjust(pval_WM.Vol_diff,method='fdr'),
+    fdr.p_WM.T1wSI_diff = p.adjust(pval_WM.T1wSI_diff,method='fdr'),
+    fdr.p_WM.MTR_diff = p.adjust(pval_WM.MTR_diff,method='fdr')
+  ) %>% 
+  select(metaboliteid,pval_WM.Vol_diff,fdr.p_WM.Vol_diff,
+         pval_WM.T1wSI_diff,fdr.p_WM.T1wSI_diff,
+         pval_WM.MTR_diff,fdr.p_WM.MTR_diff), join_by(metaboliteid) 
+  ) %>% 
+  select(all_of(to_write_sel_colnames)) %>%
+  write_tsv(file=paste0('results/beta_diff_and_interaction_test_results_',Sys.Date(),'.txt'))
 
+# numbers of lipids diff assoc with ados vs. adults ----
 ind1 = to_write$fdr.p.int.WM.Vol <0.05;print(sum(ind1))#58
 ind1 = ind1 | to_write$fdr.p.int.WM.T1wSI <0.05;print(sum(ind1))#91
 ind1 = ind1 | to_write$fdr.p.int.WM.MTR <0.05;print(sum(ind1))#513
@@ -319,7 +364,7 @@ signif.int %>% length
 
 sum(sig_lipids %in% signif.int)#432
 
-#magnitudes----
+# magnitudes----
 n1=res.int.all_unadjBMI %>% filter(bname=="Volume.WM.adjAgeSexICV") %>% filter(fdr.p.abs.diff <0.05) %>% nrow#58
 n2=res.int.all_unadjBMI %>% filter(bname=="T1wSI.WM.adjAgeSex") %>% filter(fdr.p.abs.diff <0.05)%>% nrow#41
 n3=res.int.all_unadjBMI %>% filter(bname=="MTR.WM.adjAgeSex") %>% filter(fdr.p.abs.diff <0.05) %>% nrow#467
