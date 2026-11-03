@@ -4,10 +4,10 @@
 #* [Put the full path of the input file]
 project_specific_file = "~/Documents/scripts/Metabolomic_BrainStructures_ZP/project_specific_inputs.R"
 ## Excel file: Age_group_by_lipid_interaction_test_pvalues_2026-11-03.xlsx
-## Output: z_diff_and_interaction_assoc_test_results_2026-11-03.txt
+## --Output: z_diff_and_interaction_assoc_test_results_2026-11-03.txt--
 ## Sent to Zdenka
 ## Get data from: ~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/get_data_for_interaction_test_2026-11-03.R
-
+## Output_final: beta_diff_and_interaction_test_results_rank_within_age_group_2026-11-03.xlsx
 #*****************************************************************************#
 
 # 0. initialize ----
@@ -206,10 +206,8 @@ res.int.all_unadjBMI = res.int.all_unadjBMI %>%
 res.int.all_unadjBMI %>% filter(fdr.p.int <0.05) %>% dim#566
 res.int.all_unadjBMI %>% filter(fdr.p.abs.diff <0.05) %>% dim#291
 
-res.int.all_unadjBMI %>% filter(fdr.p.int<0.05,beta.abs.diff<0) %>% dim #40 stronger in adults
-res.int.all_unadjBMI %>% filter(fdr.p.int<0.05,beta.abs.diff>0) %>% dim #526 stronger in ados
-write_tsv(res.int.all_unadjBMI,
-          paste0("results/assoc.res.int.all_unadjBMI_",Sys.Date(),".txt"))
+res.int.all_unadjBMI %>% filter(fdr.p.int<0.05,beta.abs.diff<0) %>% dim #30 stronger in adults
+res.int.all_unadjBMI %>% filter(fdr.p.int<0.05,beta.abs.diff>0) %>% dim #762 stronger in ados
 
 # merge with res_WM1
 head(res_WM1) 
@@ -352,12 +350,12 @@ p1+p2+p3 +
     vjust = 1
   )
 # numbers of lipids diff assoc with ados vs. adults ----
-ind1 = to_write$fdr.p.int.WM.Vol <0.05;print(sum(ind1))#58
-ind1 = ind1 | to_write$fdr.p.int.WM.T1wSI <0.05;print(sum(ind1))#91
-ind1 = ind1 | to_write$fdr.p.int.WM.MTR <0.05;print(sum(ind1))#513
+ind1 = to_write$fdr.p.int.WM.Vol <0.05;print(sum(ind1))#81
+ind1 = ind1 | to_write$fdr.p.int.WM.T1wSI <0.05;print(sum(ind1))#327
+ind1 = ind1 | to_write$fdr.p.int.WM.MTR <0.05;print(sum(ind1))#583
 
 ind.sig = to_write$metaboliteid %in% sig_lipids;print(sum(ind.sig))
-sum(ind.sig & ind1)#432
+sum(ind.sig & ind1)#467
 
 to_write %>% filter(ind.sig) %>% filter(fdr.p.int.WM.Vol<0.05) %>% dim#44
 to_write %>% filter(ind.sig) %>% filter(fdr.p.int.WM.T1wSI<0.05) %>% dim#12
