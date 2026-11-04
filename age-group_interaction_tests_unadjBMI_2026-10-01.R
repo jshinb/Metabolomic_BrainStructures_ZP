@@ -215,13 +215,8 @@ dim(res_WM1)
 dim(res.int.all_unadjBMI)/3
 #[1] 830   9
 
-# boxplot: beta estimates ----
-rm(ind);ind = res_WM1$fdr.p2_WM.Vol_ados<0.05;print(sum(ind))#548
-ind = ind & res_WM1$fdr.p2_WM.T1wSI_ados<0.05;print(sum(ind))#542
-ind = ind & res_WM1$fdr.p2_WM.MTR_ados<0.05;print(sum(ind))#525
-
-#generate interaction test result table----
-# started: Mon, Nov2 13:32
+# generate interaction test result table ----
+# started: Mon, Nov 2 13:32
 # long to wide:
 res.int.all_unadjBMI = res.int.all_unadjBMI %>% 
   filter(metaboliteid != "GlycA") %>%
@@ -243,7 +238,7 @@ names(interact_res_wide )=
   str_replace(names(interact_res_wide ),"MTR.WM.adjAgeSex",'WM.MTR')
 
 # same as res_WM1 ----
-age_group_stratified_res = 
+age_group_stratified_res = #same as res_WM1
   fread("~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP_clean/manuscript/TabS1_2026-03-17.txt") %>% 
   filter(metaboliteid!="GlycA")
 
@@ -275,6 +270,7 @@ to_write = merged_assoc_res %>%
   filter(metaboliteid!='GlycA')
 
 # group-specific tests of difference in age-group specific asso. estimates ----
+## write output file 
 to_write_sel_colnames=
   c("metaboliteid", "lipid class", "signif_ado",
     ## Volume
@@ -289,35 +285,35 @@ to_write_sel_colnames=
     "beta_WM.MTR_ados", "beta_WM.MTR_adults", 
     "pval_WM.MTR_diff", "fdr.p_WM.MTR_diff",
     "pval.int.WM.MTR", "fdr.p.int.WM.MTR"
-);to_write %>% 
+  );to_write %>% 
   mutate(signif_ado = ifelse(metaboliteid%in%sig_lipids,TRUE,FALSE)) %>%
   relocate(metaboliteid,`lipid class`,signif_ado) %>% 
   left_join(
-age_group_stratified_res %>% 
-  mutate(
-    beta_WM.Vol_diff = beta_WM.Vol_ados - beta_WM.Vol_adults,
-    se_WM.Vol_diff = sqrt(se_WM.Vol_ados^2 + se_WM.Vol_adults^2),
-    z_WM.Vol_diff = (beta_WM.Vol_diff/se_WM.Vol_diff),
-    pval_WM.Vol_diff = 2*pnorm(abs(z_WM.Vol_diff),lower.tail=F),
-    ##
-    beta_WM.T1wSI_diff = beta_WM.T1wSI_ados - beta_WM.T1wSI_adults,
-    se_WM.T1wSI_diff = sqrt(se_WM.T1wSI_ados^2 + se_WM.T1wSI_adults^2),
-    z_WM.T1wSI_diff = (beta_WM.T1wSI_diff/se_WM.T1wSI_diff),
-    pval_WM.T1wSI_diff = 2*pnorm(abs(z_WM.T1wSI_diff),lower.tail=F),
-    ##
-    beta_WM.MTR_diff = beta_WM.MTR_ados - beta_WM.MTR_adults,
-    se_WM.MTR_diff = sqrt(se_WM.MTR_ados^2 + se_WM.MTR_adults^2),
-    z_WM.MTR_diff = (beta_WM.MTR_diff/se_WM.MTR_diff),
-    pval_WM.MTR_diff = 2*pnorm(abs(z_WM.MTR_diff),lower.tail=F)
-  ) %>%
-  mutate(
-    fdr.p_WM.Vol_diff = p.adjust(pval_WM.Vol_diff,method='fdr'),
-    fdr.p_WM.T1wSI_diff = p.adjust(pval_WM.T1wSI_diff,method='fdr'),
-    fdr.p_WM.MTR_diff = p.adjust(pval_WM.MTR_diff,method='fdr')
-  ) %>% 
-  select(metaboliteid,pval_WM.Vol_diff,fdr.p_WM.Vol_diff,
-         pval_WM.T1wSI_diff,fdr.p_WM.T1wSI_diff,
-         pval_WM.MTR_diff,fdr.p_WM.MTR_diff), join_by(metaboliteid) 
+    age_group_stratified_res %>% 
+      mutate(
+        beta_WM.Vol_diff = beta_WM.Vol_ados - beta_WM.Vol_adults,
+        se_WM.Vol_diff = sqrt(se_WM.Vol_ados^2 + se_WM.Vol_adults^2),
+        z_WM.Vol_diff = (beta_WM.Vol_diff/se_WM.Vol_diff),
+        pval_WM.Vol_diff = 2*pnorm(abs(z_WM.Vol_diff),lower.tail=F),
+        ##
+        beta_WM.T1wSI_diff = beta_WM.T1wSI_ados - beta_WM.T1wSI_adults,
+        se_WM.T1wSI_diff = sqrt(se_WM.T1wSI_ados^2 + se_WM.T1wSI_adults^2),
+        z_WM.T1wSI_diff = (beta_WM.T1wSI_diff/se_WM.T1wSI_diff),
+        pval_WM.T1wSI_diff = 2*pnorm(abs(z_WM.T1wSI_diff),lower.tail=F),
+        ##
+        beta_WM.MTR_diff = beta_WM.MTR_ados - beta_WM.MTR_adults,
+        se_WM.MTR_diff = sqrt(se_WM.MTR_ados^2 + se_WM.MTR_adults^2),
+        z_WM.MTR_diff = (beta_WM.MTR_diff/se_WM.MTR_diff),
+        pval_WM.MTR_diff = 2*pnorm(abs(z_WM.MTR_diff),lower.tail=F)
+      ) %>%
+      mutate(
+        fdr.p_WM.Vol_diff = p.adjust(pval_WM.Vol_diff,method='fdr'),
+        fdr.p_WM.T1wSI_diff = p.adjust(pval_WM.T1wSI_diff,method='fdr'),
+        fdr.p_WM.MTR_diff = p.adjust(pval_WM.MTR_diff,method='fdr')
+      ) %>% 
+      select(metaboliteid,pval_WM.Vol_diff,fdr.p_WM.Vol_diff,
+             pval_WM.T1wSI_diff,fdr.p_WM.T1wSI_diff,
+             pval_WM.MTR_diff,fdr.p_WM.MTR_diff), join_by(metaboliteid) 
   ) %>% 
   select(all_of(to_write_sel_colnames)) %>%
   write_tsv(file=paste0('results/beta_diff_and_interaction_test_results_',Sys.Date(),'.txt'))
@@ -337,8 +333,89 @@ p3=diff_int_res  %>%
   ggplot(aes(x=-log10(pval_WM.MTR_diff),y=-log10(pval.int.WM.MTR))) + 
   geom_point() + 
   geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+plot.lims = c(0,max(-log10(diff_int_res$pval.int.WM.MTR)))
+p1+p2+p3 +
+  plot_layout(ncol=3,axes = 'collect') &
+  coord_cartesian(xlim=plot.lims,ylim=plot.lims) &
+  ggpubr::stat_cor(
+    method = "spearman",
+    label.x = plot.lims[1],
+    label.y = plot.lims[2]*1.035,
+    hjust = 0,
+    vjust = 1
+  )
+## counts of signif/insignific lipids: (all) ----
+rbind(
+  diff_int_res %>% 
+  mutate(
+    diff.signif=ifelse(pval_WM.Vol_diff<0.05, 'p-diff<0.05',"p-diff>=0.05"),
+    int.signif =ifelse(pval.int.WM.Vol<0.05,'p-int<0.05','p-int>=0.05')) %>%
+  select(contains('.signif')) %>%
+  table(),
+  diff_int_res %>% 
+    mutate(
+      diff.signif=ifelse(pval_WM.T1wSI_diff<0.05, 'p-diff<0.05',"p-diff>=0.05"),
+      int.signif =ifelse(pval.int.WM.T1wSI<0.05,'p-int<0.05','p-int>=0.05')) %>%
+    select(contains('.signif')) %>%
+    table(),
+  diff_int_res %>% 
+    mutate(
+      diff.signif=ifelse(pval_WM.MTR_diff<0.05, 'p-diff<0.05',"p-diff>=0.05"),
+      int.signif =ifelse(pval.int.WM.MTR<0.05,'p-int<0.05','p-int>=0.05')) %>%
+    select(contains('.signif')) %>%
+    table()
+)
+#              p-int<0.05 p-int>=0.05
+# p-diff<0.05         136           4
+# p-diff>=0.05         44         646
+# p-diff<0.05         387          36
+# p-diff>=0.05        107         300
+# p-diff<0.05         464          16
+# p-diff>=0.05         25         325
 
-plot.lims = c(0,max(-log10(diff_int_res$pval.int.WM.T1wSI)))
+## counts of signif/insignific lipids: (525 lipids assoc. with all three in ados) ----
+p1=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+  ggplot(aes(x=-log10(pval_WM.Vol_diff),y=-log10(pval.int.WM.Vol))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+p2=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+  ggplot(aes(x=-log10(pval_WM.T1wSI_diff),y=-log10(pval.int.WM.T1wSI))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+p3=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+  ggplot(aes(x=-log10(pval_WM.MTR_diff),y=-log10(pval.int.WM.MTR))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+##
+rbind(
+  diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+    mutate(
+      diff.signif=ifelse(pval_WM.Vol_diff<0.05, 'p-diff<0.05',"p-diff>=0.05"),
+      int.signif =ifelse(pval.int.WM.Vol<0.05,'p-int<0.05','p-int>=0.05')) %>%
+    select(contains('.signif')) %>%
+    table(),
+  diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+    mutate(
+      diff.signif=ifelse(pval_WM.T1wSI_diff<0.05, 'p-diff<0.05',"p-diff>=0.05"),
+      int.signif =ifelse(pval.int.WM.T1wSI<0.05,'p-int<0.05','p-int>=0.05')) %>%
+    select(contains('.signif')) %>%
+    table(),
+  diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+    mutate(
+      diff.signif=ifelse(pval_WM.MTR_diff<0.05, 'p-diff<0.05',"p-diff>=0.05"),
+      int.signif =ifelse(pval.int.WM.MTR<0.05,'p-int<0.05','p-int>=0.05')) %>%
+    select(contains('.signif')) %>%
+    table()
+)
+#              p-int<0.05 p-int>=0.05
+# p-diff<0.05         110           1
+# p-diff>=0.05         43         371
+# p-diff<0.05         321          30
+# p-diff>=0.05         87          87
+# p-diff<0.05         391           8
+# p-diff>=0.05         19         107
+##
+plot.lims = c(0,max(-log10(diff_int_res$pval.int.WM.MTR)))
 p1+p2+p3 +
   plot_layout(ncol=3,axes = 'collect') &
   coord_cartesian(xlim=plot.lims,ylim=plot.lims) &
@@ -363,11 +440,16 @@ to_write %>% filter(ind.sig) %>% filter(fdr.p.int.WM.MTR<0.05) %>% dim#425
 to_write%>% filter(ind1) %>% select(1:2)
 table(to_write $fdr.p.int.WM.Vol<0.05,
       ind.sig,useNA = 'a')
-
+  #       FALSE TRUE <NA>
+  # FALSE   296  453    0
+  # TRUE      9   72    0
+  # <NA>      0    0    0
 n1=res.int.all_unadjBMI %>% filter(bname=="Volume.WM.adjAgeSexICV") %>% filter(pval.int <0.05) %>% nrow#58
 n2=res.int.all_unadjBMI %>% filter(bname=="T1wSI.WM.adjAgeSex") %>% filter(pval.int <0.05)%>% nrow#41
 n3=res.int.all_unadjBMI %>% filter(bname=="MTR.WM.adjAgeSex") %>% filter(pval.int <0.05) %>% nrow#467
-c(n1,n2,n3);sum(n1,n2,n3)#141/122/564
+c(n1,n2,n3) %>% print;sum(n1,n2,n3) %>% print#141/122/564
+# [1] 180 494 489
+# [1] 1163
 
 n1=res.int.all_unadjBMI %>% filter(bname=="Volume.WM.adjAgeSexICV") %>% 
   filter(fdr.p.int <0.05,metaboliteid%in% sig_lipids) %>% nrow#44
@@ -375,12 +457,19 @@ n2=res.int.all_unadjBMI %>% filter(bname=="T1wSI.WM.adjAgeSex") %>%
   filter(fdr.p.int <0.05,metaboliteid%in% sig_lipids)%>% nrow#12
 n3=res.int.all_unadjBMI %>% filter(bname=="MTR.WM.adjAgeSex") %>% 
   filter(fdr.p.int <0.05,metaboliteid%in% sig_lipids) %>% nrow#425
-c(n1,n2,n3);sum(n1,n2,n3)#44+12+425
-
-n1=res.int.all_unadjBMI %>% filter(bname=="Volume.WM.adjAgeSexICV") %>% filter(fdr.p.int <0.05) %>% nrow#58
-n2=res.int.all_unadjBMI %>% filter(bname=="T1wSI.WM.adjAgeSex") %>% filter(fdr.p.int <0.05)%>% nrow#41
-n3=res.int.all_unadjBMI %>% filter(bname=="MTR.WM.adjAgeSex") %>% filter(fdr.p.int <0.05) %>% nrow#467
 c(n1,n2,n3);sum(n1,n2,n3)
+# [1]  72 248 350
+# [1] 670
+
+n1=res.int.all_unadjBMI %>% filter(bname=="Volume.WM.adjAgeSexICV") %>% 
+  filter(fdr.p.int <0.05) %>% nrow#58
+n2=res.int.all_unadjBMI %>% filter(bname=="T1wSI.WM.adjAgeSex") %>% 
+  filter(fdr.p.int <0.05)%>% nrow#41
+n3=res.int.all_unadjBMI %>% filter(bname=="MTR.WM.adjAgeSex") %>% 
+  filter(fdr.p.int <0.05) %>% nrow#467
+c(n1,n2,n3);sum(n1,n2,n3)
+# [1]  81 306 405
+# [1] 792
 
 n1=res.int.all_unadjBMI %>% filter(bname=="Volume.WM.adjAgeSexICV") %>% 
   filter(fdr.p.int <0.05,metaboliteid%in% sig_lipids) %>% nrow#44
@@ -389,58 +478,41 @@ n2=res.int.all_unadjBMI %>% filter(bname=="T1wSI.WM.adjAgeSex") %>%
 n3=res.int.all_unadjBMI %>% filter(bname=="MTR.WM.adjAgeSex") %>% 
   filter(fdr.p.int <0.05,metaboliteid%in% sig_lipids) %>% nrow#425
 c(n1,n2,n3);sum(n1,n2,n3)#44+12+425
+# [1]  72 248 350
+# [1] 670
 
 signif.int = res.int.all_unadjBMI %>% filter(fdr.p.int<0.05) %>% 
   pull(metaboliteid) %>% unique
-signif.int %>% length
+signif.int %>% length#583
+sum(sig_lipids %in% signif.int)#467
 
-sum(sig_lipids %in% signif.int)#432
 
-# magnitudes----
-n1=res.int.all_unadjBMI %>% filter(bname=="Volume.WM.adjAgeSexICV") %>% filter(fdr.p.abs.diff <0.05) %>% nrow#58
-n2=res.int.all_unadjBMI %>% filter(bname=="T1wSI.WM.adjAgeSex") %>% filter(fdr.p.abs.diff <0.05)%>% nrow#41
-n3=res.int.all_unadjBMI %>% filter(bname=="MTR.WM.adjAgeSex") %>% filter(fdr.p.abs.diff <0.05) %>% nrow#467
-c(n1,n2,n3);sum(n1,n2,n3)
+# scatter plot comparing estimates from ados vs. adults ---- 
+anal.date = "2026-11-03"; diff_int_res_fname = paste0('results/beta_diff_and_interaction_test_results_',anal.date,'.txt')
+diff_int_res = fread(diff_int_res_fname)
 
-MTR.291.metabo = res.int.all_unadjBMI %>% 
-  filter(bname=="MTR.WM.adjAgeSex") %>%
-  filter(fdr.p.abs.diff <0.05) %>%  pull(metaboliteid)
-sum(sig_lipids%in%MTR.291.metabo )#283
-
-plot(to_write$beta_WM.Vol_ados,to_write$beta_WM.Vol_adults)
-to_write %>% #filter(metaboliteid %in% sig_lipids) %>% 
-  mutate(signif = ifelse(pval.int.WM.MTR<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
-  ggplot(aes(x=beta_WM.MTR_adults,y=beta_WM.MTR_ados,fill = signif)) +
-  # mutate(signif = ifelse(pval.int.WM.T1wSI<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
-  # ggplot(aes(x=beta_WM.T1wSI_adults,y=beta_WM.T1wSI_ados,fill = signif)) +
-  # mutate(signif = ifelse(pval.int.WM.Vol<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
-  # ggplot(aes(x=beta_WM.Vol_adults,y=beta_WM.Vol_ados,fill = signif)) + 
+p1 = diff_int_res %>% #filter(metaboliteid %in% sig_lipids) %>% 
+  mutate(signif = ifelse(pval_WM.Vol_diff<0.05, 'p.diff<0.05','p.diff>=0.05') ) %>%
+  # mutate(signif = ifelse(pval.int.WM.MTR<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
+  ggplot(aes(x=beta_WM.Vol_adults,y=beta_WM.Vol_ados,fill = signif)) +
   geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
   #geom_smooth(method='lm') + 
-  geom_hline(yintercept = 0) + geom_vline(xintercept = 0)
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);p1
 
-interact_res_wide %>% 
-  mutate(signif = ifelse(pval.int.WM.MTR<0.05, 'p.int<0.05','p.int>=0.05') )%>%
-  ggplot(aes(x=beta.adult.WM.MTR,y=beta.ado.WM.MTR,fill = signif)) +
-  geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1)
+p2 = diff_int_res %>% #filter(metaboliteid %in% sig_lipids) %>% 
+  mutate(signif = ifelse(pval_WM.T1wSI_diff<0.05, 'p.diff<0.05','p.diff>=0.05') ) %>%
+  # mutate(signif = ifelse(pval.int.WM.MTR<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
+  ggplot(aes(x=beta_WM.T1wSI_adults,y=beta_WM.T1wSI_ados,fill = signif)) +
+  geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
+  #geom_smooth(method='lm') + 
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);p2
 
-interact_res_wide %>% arrange(abs.diff.WM.MTR) %>%
-  dplyr::select(metaboliteid,abs.diff.WM.MTR,beta.adult.WM.MTR,beta.ado.WM.MTR,pval.int.WM.MTR) %>%
-  filter(pval.int.WM.MTR<0.05) %>% filter(beta.adult.WM.MTR>0.125)
+p3 = diff_int_res %>% #filter(metaboliteid %in% sig_lipids) %>% 
+  mutate(signif = ifelse(pval_WM.MTR_diff<0.05, 'p.diff<0.05','p.diff>=0.05') ) %>%
+  # mutate(signif = ifelse(pval.int.WM.MTR<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
+  ggplot(aes(x=beta_WM.MTR_adults,y=beta_WM.MTR_ados,fill = signif)) +
+  geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
+  #geom_smooth(method='lm') + 
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);p3
 
-interact_res_wide %>% mutate(diff.MTR = beta.ado.WM.MTR - beta.adult.WM.MTR) %>%
-  filter(beta.adult.WM.MTR>0.11) %>%
-  arrange(diff.MTR) %>%
-  select(metaboliteid,contains('MTR')) %>% select(metaboliteid,contains('beta'))
-
-to_write %>% mutate(diff.MTR = beta_WM.MTR_ados - beta_WM.MTR_adults) %>%
-  filter(beta_WM.MTR_adults>0.1) %>%
-  #filter(metaboliteid == 'CE(22:0)') %>% 
-  select(metaboliteid,contains('MTR'))
-
-interact_res_wide %>% filter(metaboliteid=="CE(18:4)") %>%
-  select(metaboliteid,contains('MTR')) %>% select(contains('beta'))
-
-to_write %>% filter(metaboliteid=="CE(18:4)") %>%
-  select(metaboliteid,contains('MTR')) %>% select(contains('beta'))
-
+p1+p2+p3 + plot_layout(ncol=3,guides='collect')
