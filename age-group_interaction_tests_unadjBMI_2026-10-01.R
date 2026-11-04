@@ -14,7 +14,7 @@ project_specific_file = "~/Documents/scripts/Metabolomic_BrainStructures_ZP/proj
 source(project_specific_file)
 setwd(wd)
 res_WM1 = fread("~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP_clean/manuscript/TabS1_2026-03-17.txt")
-head(res_WM1 )
+head(res_WM1 %>% select(1:7))
 res_WM1 = res_WM1 %>% filter(metaboliteid!='GlycA')
 
 ind_ado = res_WM1$fdr.p2_WM.T1wSI_ados<0.05;print(sum(ind_ado))#650
@@ -334,6 +334,7 @@ p3=diff_int_res  %>%
   geom_point() + 
   geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
 plot.lims = c(0,max(-log10(diff_int_res$pval.int.WM.MTR)))
+#+ compare_interaction_pvalues_830metabolites, fig.width=18, fig.height=6.75
 p1+p2+p3 +
   plot_layout(ncol=3,axes = 'collect') &
   coord_cartesian(xlim=plot.lims,ylim=plot.lims) &
@@ -374,19 +375,6 @@ rbind(
 # p-diff>=0.05         25         325
 
 ## counts of signif/insignific lipids: (525 lipids assoc. with all three in ados) ----
-p1=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
-  ggplot(aes(x=-log10(pval_WM.Vol_diff),y=-log10(pval.int.WM.Vol))) + 
-  geom_point() + 
-  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
-p2=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
-  ggplot(aes(x=-log10(pval_WM.T1wSI_diff),y=-log10(pval.int.WM.T1wSI))) + 
-  geom_point() + 
-  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
-p3=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
-  ggplot(aes(x=-log10(pval_WM.MTR_diff),y=-log10(pval.int.WM.MTR))) + 
-  geom_point() + 
-  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
-##
 rbind(
   diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
     mutate(
@@ -415,6 +403,20 @@ rbind(
 # p-diff<0.05         391           8
 # p-diff>=0.05         19         107
 ##
+p1=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+  ggplot(aes(x=-log10(pval_WM.Vol_diff),y=-log10(pval.int.WM.Vol))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+p2=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+  ggplot(aes(x=-log10(pval_WM.T1wSI_diff),y=-log10(pval.int.WM.T1wSI))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+p3=diff_int_res %>% filter(metaboliteid%in% sig_lipids) %>%
+  ggplot(aes(x=-log10(pval_WM.MTR_diff),y=-log10(pval.int.WM.MTR))) + 
+  geom_point() + 
+  geom_abline(intercept = 0,slope = 1,col="darkblue")#+geom_smooth(method="lm")
+##
+#+ compare-interaction-test-pvals-sig-lipids, fig.width=18, fig.height=5.75
 plot.lims = c(0,max(-log10(diff_int_res$pval.int.WM.MTR)))
 p1+p2+p3 +
   plot_layout(ncol=3,axes = 'collect') &
@@ -488,6 +490,7 @@ sum(sig_lipids %in% signif.int)#467
 
 
 # scatter plot comparing estimates from ados vs. adults ---- 
+## 830 tested lipids ----
 anal.date = "2026-11-03"; diff_int_res_fname = paste0('results/beta_diff_and_interaction_test_results_',anal.date,'.txt')
 diff_int_res = fread(diff_int_res_fname)
 
@@ -497,7 +500,7 @@ p1 = diff_int_res %>% #filter(metaboliteid %in% sig_lipids) %>%
   ggplot(aes(x=beta_WM.Vol_adults,y=beta_WM.Vol_ados,fill = signif)) +
   geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
   #geom_smooth(method='lm') + 
-  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);p1
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);#p1
 
 p2 = diff_int_res %>% #filter(metaboliteid %in% sig_lipids) %>% 
   mutate(signif = ifelse(pval_WM.T1wSI_diff<0.05, 'p.diff<0.05','p.diff>=0.05') ) %>%
@@ -505,7 +508,7 @@ p2 = diff_int_res %>% #filter(metaboliteid %in% sig_lipids) %>%
   ggplot(aes(x=beta_WM.T1wSI_adults,y=beta_WM.T1wSI_ados,fill = signif)) +
   geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
   #geom_smooth(method='lm') + 
-  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);p2
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);#p2
 
 p3 = diff_int_res %>% #filter(metaboliteid %in% sig_lipids) %>% 
   mutate(signif = ifelse(pval_WM.MTR_diff<0.05, 'p.diff<0.05','p.diff>=0.05') ) %>%
@@ -513,6 +516,38 @@ p3 = diff_int_res %>% #filter(metaboliteid %in% sig_lipids) %>%
   ggplot(aes(x=beta_WM.MTR_adults,y=beta_WM.MTR_ados,fill = signif)) +
   geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
   #geom_smooth(method='lm') + 
-  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);p3
-
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);#p3
+#+ compare-ado-vs-adult-assoc-estimates, fig.width=18, fig.height=5.75
 p1+p2+p3 + plot_layout(ncol=3,guides='collect')
+
+## 525 WM associated lipids ----
+anal.date = "2026-11-03"; diff_int_res_fname = paste0('results/beta_diff_and_interaction_test_results_',anal.date,'.txt')
+diff_int_res = fread(diff_int_res_fname)
+
+p1 = diff_int_res %>% filter(metaboliteid %in% sig_lipids) %>% 
+  mutate(signif = ifelse(pval_WM.Vol_diff<0.05, 'p.diff<0.05','p.diff>=0.05') ) %>%
+  # mutate(signif = ifelse(pval.int.WM.MTR<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
+  ggplot(aes(x=beta_WM.Vol_adults,y=beta_WM.Vol_ados,fill = signif)) +
+  geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
+  #geom_smooth(method='lm') + 
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);#p1
+
+p2 = diff_int_res %>% filter(metaboliteid %in% sig_lipids) %>% 
+  mutate(signif = ifelse(pval_WM.T1wSI_diff<0.05, 'p.diff<0.05','p.diff>=0.05') ) %>%
+  # mutate(signif = ifelse(pval.int.WM.MTR<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
+  ggplot(aes(x=beta_WM.T1wSI_adults,y=beta_WM.T1wSI_ados,fill = signif)) +
+  geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
+  #geom_smooth(method='lm') + 
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);#p2
+
+p3 = diff_int_res %>% filter(metaboliteid %in% sig_lipids) %>% 
+  mutate(signif = ifelse(pval_WM.MTR_diff<0.05, 'p.diff<0.05','p.diff>=0.05') ) %>%
+  # mutate(signif = ifelse(pval.int.WM.MTR<0.05, 'p.int<0.05','p.int>=0.05') ) %>%
+  ggplot(aes(x=beta_WM.MTR_adults,y=beta_WM.MTR_ados,fill = signif)) +
+  geom_point(shape = 21) + geom_abline(intercept = 0, slope = 1) + 
+  #geom_smooth(method='lm') + 
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0);#p3
+#+ compare-ado-vs-adult-assoc-estimates, fig.width=18, fig.height=5.75
+p1+p2+p3 + plot_layout(ncol=3,guides='collect')
+
+# knitr::spin('~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/age-group_interaction_tests_unadjBMI_2026-10-01.R')
