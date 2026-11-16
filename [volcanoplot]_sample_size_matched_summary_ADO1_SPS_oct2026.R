@@ -1,5 +1,5 @@
 # CREATED: 2026-10-27 
-# Modified: 2026-10-28
+# Modified: 2026-11-16
 wd = "~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP"
 setwd(wd)
 
@@ -76,17 +76,20 @@ point.size = 1;plot.cols = cols
 generation_plot = 'ado1_resample'
 #signif.level = 0.05 #*[FOR NOW -- NEED TO THINK ABOUT THIS] 
 load('results/signif_level_used_for_Fig1_apr2026.Rdata',verbose = T)#0.01889204
+print(signif.level)
 p = list();for (ti in 1:3) {
   trait_plot = traits[ti];
 
 p[[ti]] = volcano_main_all %>% 
   mutate(prop.signif = ifelse(prop_sig>0.9, "%p<0.05 >90","%p<0.05 <=90")) %>%
   mutate(prop.signif = factor(prop.signif,levels=c("%p<0.05 >90","%p<0.05 <=90"))) %>%
+  mutate(fdr.signif = ifelse(mean_p<signif.level,"p.fdr<0.05","p.fdr>=0.05")) %>%
+  mutate(fdr.signif = factor(fdr.signif,levels=c("p.fdr<0.05","p.fdr>=0.05"))) %>%
   filter(trait == trait_plot, generation==generation_plot) %>%
   ggplot(aes(x=median_beta,y=-log10(mean_p),
-             shape=prop.signif,
-             fill=prop.signif,
-             color=prop.signif)) + 
+             shape=fdr.signif,
+             fill=fdr.signif,
+             color=fdr.signif)) + 
               # color=prop_sig)) + 
              #color=`lipid class`)) + 
   geom_point(alpha=0.5,size=point.size,stroke = 1) +
@@ -118,13 +121,15 @@ load("results/separate_Fig1_volcanoplots.Rdata",verbose = T)
 p_resample_ados_adults = p[[1]] + p[[2]] + p[[3]] + 
   volcano_WM.vol_adults + volcano_WM.T1wSI_adults + volcano_WM.MTR_adults + 
   plot_layout(ncol=3, axes='collect', guides = 'collect') &
-  coord_cartesian(ylim = c(0,13),xlim=c(-0.3,0.3));p_resample_ados_adults
+  coord_cartesian(ylim = c(0,13),xlim=c(-0.3,0.3));p_resample_ados_adults& 
+  ggtitle(NULL) &xlab(NULL) &ylab(NULL) &theme(legend.position = "n")
 
 ggsave(paste0('results/[manuscript]_sample_size_matched_volcalnoplots_ados_adults_',Sys.Date(),'.png'),
-       plot=p_resample_ados_adults & ggtitle(NULL) &theme(legend.position = 'none')&xlab(NULL) &ylab(NULL),
-       height=14.61,width=19.71,units='cm',dpi=300)
-#
+       plot=p_resample_ados_adults & ggtitle(NULL) &xlab(NULL) &ylab(NULL),#&theme(legend.position = 'none')
+       width=19.71,height=14.61,units='in',dpi=300)
+500*(19.71/14.61)
 
+# 4. pie plots ----
 group = 'ados_resample';for (ti in 1:3) {
   trait_plot = traits[ti];
   
