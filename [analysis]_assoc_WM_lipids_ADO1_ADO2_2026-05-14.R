@@ -76,7 +76,7 @@ generate_volcano_plot <- function(df_plot,
 }
 
 # 2. ADO2 data import and cleaning ----
-# 2A. Covariate and lipid data
+## 2A. Covariate and lipid data ----
 covariate_lipid_data <- fread(file.path(wd, ado2datadir,
                                         "jean_shin_dataanalysis_20231027_ado2_20260508_111322.txt"))
 
@@ -87,7 +87,7 @@ covariate_data %>% describe
 
 table(covariate_data$visit_batch)
 
-# Lipid data
+## 2B. Ado2 lipid data ----
 lipid_data <- covariate_lipid_data %>% select(-contains("ADO2-FieldModule"))
 lipid_data2 <- fread(file.path(wd, ado2datadir,
                                "jean_shin_dataanalysis_20231027_ado2_20260508_153940.txt"))
@@ -127,7 +127,7 @@ ID.high.missing <- nobs.high %>% pull(ID)
 lipid_data <- lipid_data %>% select(-all_of(ID.high.missing))
 rm(nobs, nobs.high, ID.high.missing)
 
-# 2B. Brain data
+## 2C. Brain data ----
 volume_data <- fread(file.path(wd, ado2datadir, "TNT_ADO2_May2026_volumes.csv"))
 WM_vol_vars <- c("WMVolume", "FrontalRightWMVolume", "ParietalRightWMVolume",
                  "TemporalRightWMVolume", "OccipitalRightWMVolume",
@@ -144,7 +144,7 @@ volume_data <- volume_data %>%
 T1wSI_data <- fread(file.path(wd, ado2datadir, "TNT_ADO2_May2026_intensities_t1w.csv"))
 MTR_data <- fread(file.path(wd, ado2datadir, "TNT_ADO2_May2026_intensities_mtr.csv"))
 
-# 2C. Create analytic dataset for ADO2
+## 2D. Create analytic dataset for ADO2 ----
 analdat <- lipid_data %>%
   select(uniqueID) %>%
   left_join(covariate_data) %>%
@@ -158,12 +158,13 @@ analdat <- lipid_data %>%
               mutate(uniqueID = str_replace(subject_id, "fam", "FAM")) %>%
               select(uniqueID, MTR.WM = WM))
 
+analdat %>% select(AgeAdoAtHospitalVisit ) %>% describe
 analdat %>% describe %>% select(n)
 analdat_ADO2 <- analdat
 ID_in_ADO2 <- analdat$uniqueID
 
 # 3. ADO1 data import and cleaning ----
-# 3A. Brain metrics
+## 3A. Brain metrics ----
 load("~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP/data/sys_d_merge_2026-04-01.Rdata")
 
 d_merge <- d_merge %>%
@@ -193,7 +194,7 @@ brain_ado <- d_merge %>%
   mutate(icv.c = icv.c[, 1],
          icv.c2 = icv.c^2)
 
-# 3B. Load ADO1 lipid data and metadata
+## 3B. Load ADO1 lipid data and metadata ----
 res_WM1 <- fread("~/Library/CloudStorage/OneDrive-Personal/Metabolomic_BrainStructures_ZP_clean/manuscript/TabS1_2026-03-17.txt")
 res_WM1 <- res_WM1 %>% filter(metaboliteid != "GlycA")
 
@@ -221,7 +222,7 @@ rm_lipids <- lipid_ado1 %>%
 lipid_ado1 <- lipid_ado1 %>% select(-all_of(rm_lipids %>% pull(metaboliteid)))
 metabodata_ado <- lipid_ado1 %>% select(-sub_id, -fam_id)
 
-# 3C. Covariate data for ADO1
+## 3C. Covariate data for ADO1 ----
 covdata <- fread("data/covdata_ados.txt")
 
 # 3D. Adjust metabolites for age and sex
@@ -259,7 +260,8 @@ for (yi in seq_along(ynames)) {
     dat[["y.rnt"]] <- inormal(dat[[yname]])
     dat[["m"]] <- inormal(dat[[mname]])
     
-    fit <- lm(y.rnt ~ m + (age.c + age.c2), data = dat)
+    fit <- lm(y.rnt ~ m + (age.c + age.c2), 
+              data = dat %>% filter(uniqueID %in% analdat$uniqueID)) #ADO1 in ADO2
     
     resi <- c(
       trait = yname,
