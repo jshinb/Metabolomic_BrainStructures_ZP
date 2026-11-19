@@ -55,6 +55,10 @@ summary(fit.lmer.PC1WM_PC3Met)$coef %>%
   data.table %>% select(-contains("value"),-contains("df")) %>%
   slice(2)
 ) %>% bind_cols(adj = c("unadjBMI","adjBMI"))
+#      Estimate Std. Error     Pr(>|t|)      adj
+#         <num>      <num>        <num>   <char>
+# 1: -0.1624758 0.03252977 7.034604e-07 unadjBMI
+# 2: -0.1366618 0.03060862 8.999325e-06   adjBMI
 
 ## PC1.WM vs. PC1.Met ----
 fit.lmer.PC1WM_PC1Met = lmer(
